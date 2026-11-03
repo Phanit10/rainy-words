@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rainy Words</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="skyline" aria-hidden="true"></canvas>
+  <canvas id="rain" aria-hidden="true"></canvas>
+
+  <!-- 1 · Connect and pick a nickname -->
+  <section id="screen-join" class="screen is-active" aria-labelledby="join-title">
+    <div class="card card--hero">
+      <p class="eyebrow">Two players · one storm · sixty seconds</p>
+      <h1 id="join-title" class="logo"><span class="logo__rainy">Rainy</span> <span class="logo__words">Words</span></h1>
+      <p id="conn" class="conn" data-state="wait"><i></i><span id="conn-text">Connecting to the server…</span></p>
+
+      <form id="join-form" autocomplete="off">
+        <label for="nick">Your nickname</label>
+        <div class="row">
+          <input id="nick" maxlength="12" placeholder="e.g. Alice" spellcheck="false" required disabled>
+          <button id="join-btn" class="btn btn--primary" disabled>Enter</button>
+        </div>
+        <p id="join-error" class="error" role="alert"></p>
+      </form>
+
+      <div class="online">
+        <h2>Online now <b id="join-count">0</b></h2>
+        <ul id="join-list" class="chips"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · Lobby -->
+  <section id="screen-lobby" class="screen" aria-labelledby="welcome">
+    <div class="lobby">
+      <header class="lobby__head">
+        <h1 id="welcome">Welcome.</h1>
+        <p class="muted">Type the falling words before your opponent does. The match starts when two players are ready.</p>
+      </header>
+
+      <div class="lobby__grid">
+        <div class="card">
+          <h2>Connected players <b id="lobby-count">0</b></h2>
+          <ul id="lobby-list" class="players"></ul>
+        </div>
+
+        <div class="card">
+          <h2>Mode <button type="button" class="sound-btn" data-sound-toggle aria-pressed="true">Sound on</button></h2>
+          <div class="modes" role="radiogroup" aria-label="Game mode">
+            <button type="button" class="mode" data-mode="storm" role="radio">
+              <strong>Storm</strong>
+              <span>Combo multipliers, wind that pushes the words around, and speed that adapts to your accuracy.</span>
+            </button>
+            <button type="button" class="mode" data-mode="classic" role="radio">
+              <strong>Classic</strong>
+              <span>Straight rain, steady speed, one point per word.</span>
+            </button>
+          </div>
+          <label class="theme" for="theme-input">Theme</label>
+          <input id="theme-input" class="theme__input" maxlength="24" placeholder="Random each match" spellcheck="false" autocomplete="off">
+          <p class="theme__hint muted">The AI picks words that fit it, like pirates, space or kitchen.</p>
+          <button type="button" id="ready-btn" class="btn btn--primary btn--big">I'm ready</button>
+          <p id="lobby-status" class="muted lobby__status"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · The match -->
+  <section id="screen-game" class="screen" aria-label="Match">
+    <header class="hud">
+      <div class="who who--me">
+        <span class="who__name" id="me-name">You</span>
+        <span class="who__score" id="me-score">0</span>
+        <span class="who__meta" id="me-meta"></span>
+      </div>
+      <div class="clock">
+        <div id="timer" class="timer" role="timer">1:00</div>
+        <div class="tags">
+          <span id="tag-words" class="tag"></span>
+          <span id="tag-level" class="tag"></span>
+          <span id="tag-weather" class="tag"></span>
+        </div>
+      </div>
+      <div class="who who--foe">
+        <span class="who__name" id="foe-name">Opponent</span>
+        <span class="who__score" id="foe-score">0</span>
+        <span class="who__meta" id="foe-meta"></span>
+      </div>
+    </header>
+
+    <div class="tug" id="tug" data-lead="even" aria-live="off">
+      <div class="tug__rope">
+        <i class="tug__fill" id="tug-fill"></i>
+        <i class="tug__mid"></i>
+        <i class="tug__knot" id="tug-knot"><b id="tug-label">Even</b></i>
+      </div>
+    </div>
+
+    <p class="booth" id="booth">
+      <b id="booth-tag">Booth</b><span id="booth-text">The commentator is warming up…</span>
+      <button type="button" id="voice-btn" class="booth__voice" aria-pressed="true" hidden>Voice on</button>
+      <button type="button" class="booth__voice" data-sound-toggle aria-pressed="true">Sound on</button>
+    </p>
+
+    <div class="field" id="field">
+      <canvas id="city" class="field__city" aria-hidden="true"></canvas>
+      <div class="ground"></div>
+      <div id="words"></div>
+      <canvas id="fx" class="field__fx" aria-hidden="true"></canvas>
+      <div class="banner" id="banner" aria-live="polite"></div>
+
+      <div class="overlay" id="overlay-prep" hidden>
+        <div class="prep">
+          <p class="prep__welcome" id="prep-welcome"></p>
+          <div class="vs" id="vs">
+            <div class="vs__side vs__side--me"><span>You</span><b id="vs-me"></b></div>
+            <svg class="vs__bolt" viewBox="0 0 40 80" aria-hidden="true"><path d="M25 0 L5 45 H18 L11 80 L35 30 H22 Z"/></svg>
+            <div class="vs__side vs__side--foe"><span>Opponent</span><b id="vs-foe"></b></div>
+          </div>
+          <div class="prep__count" id="prep-count"></div>
+          <p class="muted" id="prep-note"></p>
+        </div>
+      </div>
+
+      <div class="overlay" id="overlay-end" hidden>
+        <div class="result" id="result" data-result="">
+          <p class="result__kicker" id="end-kicker">Time's up</p>
+          <h2 class="result__verdict" id="end-verdict">Win</h2>
+          <div class="result__scores">
+            <div class="me"><span id="end-me-name"></span><b id="end-me-score">0</b></div>
+            <i>:</i>
+            <div class="foe"><b id="end-foe-score">0</b><span id="end-foe-name"></span></div>
+          </div>
+          <table class="result__stats">
+            <tbody id="end-stats"></tbody>
+          </table>
+          <p class="result__quote" id="end-quote"></p>
+          <div class="result__actions">
+            <button type="button" id="rematch-btn" class="btn btn--primary">Rematch</button>
+            <button type="button" id="lobby-btn" class="btn">Back to lobby</button>
+          </div>
+          <p class="muted" id="rematch-status"></p>
+        </div>
+      </div>
+    </div>
+
+    <footer class="dock" id="dock" data-state="idle">
+      <div class="combo" id="combo" data-mult="1">
+        <b id="combo-mult">×1</b>
+        <div class="combo__body">
+          <span id="combo-label">Combo</span>
+          <div class="combo__bar"><i id="combo-fill"></i></div>
+        </div>
+      </div>
+      <div class="typebox">
+        <div class="echo" id="echo" aria-hidden="true"></div>
+        <input id="type" maxlength="16" placeholder="type a word, then Enter or Space" aria-label="Type the falling words"
+               autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" disabled>
+        <span class="typebox__note" id="type-note" aria-live="polite"></span>
+      </div>
+      <div class="acc">
+        <span>Accuracy</span>
+        <b id="acc">–</b>
+      </div>
+    </footer>
+  </section>
+
+  <div id="toasts" aria-live="polite"></div>
+
+  <script src="config.js"></script>
+  <script src="client.js"></script>
+</body>
+</html>

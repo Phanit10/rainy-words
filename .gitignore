@@ -1,0 +1,6 @@
+node_modules/
+.env
+models/
+.DS_Store
+# presenter notes, kept out of the code repo
+Rainy Words 5-minute prototype pitch.pdf

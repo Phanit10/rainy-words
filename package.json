@@ -1,0 +1,27 @@
+{
+  "name": "rainy-words",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Rainy Words: a two-player typing race over sockets",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "set-host": "node scripts/set-host.js",
+    "check:ai": "node scripts/check-ai.js",
+    "bot": "node test/bot.js",
+    "test": "node test/game.test.js && node test/llm.test.js && node test/theme.test.js && node test/voice.test.js"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
+    "@huggingface/transformers": "^3.8.1",
+    "express": "^5.2.1",
+    "kokoro-js": "^1.2.1",
+    "socket.io": "^4.8.4"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.4"
+  }
+}
