@@ -85,7 +85,7 @@ const BOOTH_MAX_AI_CALLS = 8;
 /* ── State ───────────────────────────────────────────────────────────────── */
 
 const clients = new Map(); // socket.id → { id, name, status, ready, readyAt, wins, ip, since }
-let lobbyMode = 'storm'; // 'storm' (all extras) or 'classic' (the base rules only)
+let lobbyMode = 'classic'; // 'classic' (the assignment's rules, so the default) or 'storm' (all extras)
 let lobbyTheme = null; // a theme typed in the lobby, or null for a random one each match
 let match = null; // the single arena: null, or a match in phase preparing → countdown → playing → ended
 let matchSeq = 0;

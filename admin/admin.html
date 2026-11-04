@@ -25,6 +25,7 @@
 
     #reset { font: 700 14px/1 inherit; color: #fff; background: #d8344f; border: none; border-radius: 10px; padding: 12px 18px; cursor: pointer; }
     #reset:hover { background: #ef4b66; }
+    #reset[data-armed="true"] { background: #ffc23d; color: #1a1200; }
     #reset:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
     .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
@@ -120,8 +121,25 @@
       socket.on('connect_error', (err) => { $('link').dataset.up = 'false'; $('link-text').textContent = err.message; });
       socket.on('state', render);
 
+      // Two clicks instead of confirm(): some embedded browsers suppress confirm() and it silently answers "Cancel".
+      const RESET_LABEL = 'Reset game and scores';
+      let armedUntil = 0;
+      let labelTimer = null;
+      function showReset(text, armed = false, ms = 0) {
+        $('reset').textContent = text;
+        $('reset').dataset.armed = String(armed);
+        clearTimeout(labelTimer);
+        if (ms) labelTimer = setTimeout(() => showReset(RESET_LABEL), ms);
+      }
       $('reset').addEventListener('click', () => {
-        if (confirm('Stop the current game and reset every score?')) socket.emit('reset');
+        if (Date.now() > armedUntil) {
+          armedUntil = Date.now() + 4000;
+          showReset('Click again to reset', true, 4000);
+          return;
+        }
+        armedUntil = 0;
+        showReset('Resetting…');
+        socket.timeout(5000).emit('reset', (err, res) => showReset(!err && res && res.ok ? 'Game and scores reset ✓' : 'Reset failed: server not answering', false, 2500));
       });
 
       function render(s) {

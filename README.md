@@ -14,7 +14,7 @@ npm run set-host   # writes this computer's network address into public/config.j
 npm start
 ```
 
-On macOS you can double-click `start.command` instead: it updates the address and starts the server in one go.
+Or double-click the launcher instead: `start.bat` on Windows, `start.command` on macOS. It updates the address and starts the server in one go (`start.bat` also runs `npm install` the first time).
 
 The first start downloads the two on-device AI models (about 120 MB) into `models/`. After that the game works without internet.
 

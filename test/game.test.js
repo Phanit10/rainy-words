@@ -37,6 +37,9 @@ async function main() {
     check('server terminal prints client count and list', /\[clients\] 2 connected: Alice, Bob/.test(server.log()));
 
     /* ── start a storm match ────────────────────────────────────────────── */
+    check('the lobby starts in classic mode', a.lobby.mode === 'classic');
+    a.socket.emit('setMode', 'storm');
+    await sleep(100);
     a.socket.emit('ready', true);
     await sleep(100);
     check('one ready player does not start a match', !a.events.some(([e]) => e === 'matchPreparing'));

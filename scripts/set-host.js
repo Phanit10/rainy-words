@@ -9,9 +9,14 @@ const os = require('os');
 const path = require('path');
 
 const file = path.join(__dirname, '..', 'public', 'config.js');
-const lan = Object.values(os.networkInterfaces())
-  .flat()
-  .filter((net) => net && net.family === 'IPv4' && !net.internal)
+
+// Virtual adapters (Hyper-V, WSL, VMs, Docker) and VPNs have addresses the second computer can't reach,
+// so they go last: the Wi-Fi or Ethernet address wins. For a VPN demo, pass its address explicitly.
+const VIRTUAL = /vethernet|hyper-v|wsl|virtualbox|vmware|vbox|docker|hamachi|zerotier|tailscale|utun|tun\d|tap\d/i;
+const lan = Object.entries(os.networkInterfaces())
+  .flatMap(([name, nets]) => nets.map((net) => ({ ...net, virtual: VIRTUAL.test(name) })))
+  .filter((net) => net.family === 'IPv4' && !net.internal)
+  .sort((a, b) => a.virtual - b.virtual)
   .map((net) => net.address);
 
 const args = process.argv.slice(2);

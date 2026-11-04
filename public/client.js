@@ -231,6 +231,11 @@
     },
     rival: (t) => tone(392, t, 0.16, { type: 'triangle', volume: 0.07, slideTo: 330 }),
     miss: (t) => tone(150, t, 0.2, { type: 'square', volume: 0.05, slideTo: 90 }),
+    typo: (t) => tone(220, t, 0.08, { type: 'square', volume: 0.0525, slideTo: 160 }),
+    click: (t) => {
+      tone(1200, t, 0.04, { type: 'triangle', volume: 0.075, slideTo: 800 });
+      hiss(t, 0.03, { filter: 'highpass', freq: 4000, volume: 0.0375 });
+    },
     splash: (t) => {
       tone(1100, t, 0.12, { volume: 0.05, slideTo: 260 });
       hiss(t, 0.18, { freq: 1800, volume: 0.04 });
@@ -264,7 +269,7 @@
   function updateAmbience(now) {
     if (!rainGain || now - ambienceAt < 250) return;
     ambienceAt = now;
-    const level = (0.05 + sky.shownRain * 0.16) * (speaking ? 0.45 : 1);
+    const level = (0.025 + sky.shownRain * 0.08) * (speaking ? 0.45 : 1);
     rainGain.gain.setTargetAtTime(level, audioCtx.currentTime, 0.4);
   }
 
@@ -289,6 +294,11 @@
     });
   }
   renderSoundButtons();
+
+  // Every button clicks. This runs after the button's own handler, so switching sound off stays silent.
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('button:not(:disabled)')) sound('click');
+  });
 
   /* ── Neon city ─────────────────────────────────────────────────────────── */
 
@@ -927,6 +937,8 @@
     return n;
   }
 
+  let typedBefore = 0; // length of the box at the last refresh, to tell a new letter from a backspace
+
   /** Colours what the player has typed: green where it matches a falling word, red where it stops matching. */
   function refreshTyping() {
     const typed = typeEl.value.toLowerCase();
@@ -960,6 +972,10 @@
       word.el.classList.toggle('is-target', fits || nearMiss);
       word.el.classList.toggle('is-exact', fits && word.text.length === typed.length);
     }
+
+    // a new letter that matches no falling word gets a low thunk, on top of the key tick
+    if (typed.length > typedBefore && !onTrack) sound('typo');
+    typedBefore = typed.length;
 
     $('echo').replaceChildren(...[...typed].map((ch, i) => el('span', i < reach ? 'ok' : 'bad', ch)));
     dock.dataset.state = !typed ? 'idle' : exact ? 'exact' : onTrack ? 'ok' : 'bad';
